@@ -1,5 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
 import {
-  TESTNET_TOKEN_METADATA,
   TOKEN_METADATA,
   type SUPPORTED_TOKENS,
 } from "@avail-project/nexus-core";
@@ -15,20 +15,16 @@ import { Label } from "../ui/label";
 
 const TokenSelect = ({
   selectedToken,
-  selectedChain,
   handleTokenSelect,
-  isTestnet = false,
   disabled = false,
-  tokenLabel = "Destination Token",
+  tokenLabel,
 }: {
   selectedToken?: SUPPORTED_TOKENS;
-  selectedChain: string;
   handleTokenSelect: (token: SUPPORTED_TOKENS) => void;
-  isTestnet?: boolean;
   disabled?: boolean;
-  tokenLabel?: string;
+  tokenLabel: string;
 }) => {
-  const tokenData = isTestnet ? TESTNET_TOKEN_METADATA : TOKEN_METADATA;
+  const tokenData = TOKEN_METADATA;
   const selectedTokenData = Object.entries(tokenData)?.find(([, token]) => {
     return token.symbol === selectedToken;
   });
@@ -45,7 +41,7 @@ const TokenSelect = ({
         )}
         <SelectTrigger disabled={disabled}>
           <SelectValue placeholder="Select a token">
-            {selectedChain && selectedTokenData && (
+            {selectedTokenData && (
               <div className="flex items-center gap-x-2">
                 <img
                   src={selectedTokenData[1].icon}
@@ -75,7 +71,7 @@ const TokenSelect = ({
                 />
                 <div className="flex flex-col">
                   <span>
-                    {isTestnet ? `${token.symbol} (Testnet)` : token.symbol}
+                    {token.symbol}
                   </span>
                 </div>
               </div>

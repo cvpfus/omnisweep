@@ -19,6 +19,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NexusProvider from "./NexusProvider";
 import { ThirdwebProvider } from "thirdweb/react";
+import { TransactionPopupProvider } from "@blockscout/app-sdk";
 
 const config = createConfig({
   chains: [
@@ -61,7 +62,9 @@ const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     <WagmiProvider config={config}>
       <ThirdwebProvider>
         <QueryClientProvider client={queryClient}>
-          <NexusProvider>{children}</NexusProvider>
+          <TransactionPopupProvider>
+            <NexusProvider>{children}</NexusProvider>
+          </TransactionPopupProvider>
         </QueryClientProvider>
       </ThirdwebProvider>
     </WagmiProvider>

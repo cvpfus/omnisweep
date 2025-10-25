@@ -2,11 +2,28 @@
 
 import ConnectWallet from "@/components/blocks/connect-wallet";
 import Nexus from "@/components/nexus";
-import NexusInitButton from "@/components/nexus-init";
+import { Button } from "@/components/ui/button";
+import useGetIntents from "@/hooks/useGetIntents";
 import { useNexus } from "@/providers/NexusProvider";
+import { useTransactionPopup } from "@blockscout/app-sdk";
+import { useAccount } from "wagmi";
 
 export default function Home() {
   const { nexusSDK } = useNexus();
+  const account = useAccount();
+  const { data: intents } = useGetIntents();
+
+  const { openPopup } = useTransactionPopup();
+
+  console.log("intents", intents);
+
+  const handleShowHistory = () => {
+    openPopup({
+      chainId: account.chainId?.toString() ?? "1",
+      address: account.address,
+    });
+  };
+
   return (
     <div className="font-sans flex flex-col items-center justify-items-center min-h-screen p-8 pb-20 gap-y-6 sm:p-20">
       <h1 className="text-3xl font-semibold z-10">
@@ -17,18 +34,9 @@ export default function Home() {
       </h2>
       <div className="flex gap-x-4 items-center justify-center z-10">
         <ConnectWallet />
-        <NexusInitButton />
+        <Button onClick={handleShowHistory}>Show History</Button>
       </div>
       {nexusSDK?.isInitialized() && <Nexus />}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(125% 125% at 50% 10%, #ffffff 40%, #14b8a6 100%)
-          `,
-          backgroundSize: "100% 100%",
-        }}
-      />
     </div>
   );
 }

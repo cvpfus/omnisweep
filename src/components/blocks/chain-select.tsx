@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import {
   type SUPPORTED_CHAINS_IDS,
   TESTNET_CHAINS,
@@ -17,17 +18,15 @@ import { Label } from "../ui/label";
 const ChainSelect = ({
   selectedChain,
   handleSelect,
-  chainLabel = "Destination Chain",
-  isTestnet = false,
   disabled = false,
+  chainLabel
 }: {
   selectedChain: SUPPORTED_CHAINS_IDS;
   handleSelect: (chainId: SUPPORTED_CHAINS_IDS) => void;
-  chainLabel?: string;
-  isTestnet?: boolean;
+  chainLabel: string;
   disabled?: boolean;
 }) => {
-  const chains = isTestnet ? TESTNET_CHAINS : MAINNET_CHAINS;
+  const chains = MAINNET_CHAINS;
   const chainData = CHAIN_METADATA;
   return (
     <Select
@@ -39,9 +38,8 @@ const ChainSelect = ({
       }}
     >
       <div className="flex flex-col items-start gap-y-1">
-        {chainLabel && (
-          <Label className="text-sm font-semibold">{chainLabel}</Label>
-        )}
+        <Label className="text-sm font-semibold">{chainLabel}</Label>
+
         <SelectTrigger disabled={disabled}>
           <SelectValue>
             {!!selectedChain && (

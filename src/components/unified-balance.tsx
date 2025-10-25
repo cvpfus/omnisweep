@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useNexus } from "@/providers/NexusProvider";
 import { CHAIN_METADATA, type UserAsset } from "@avail-project/nexus-core";
 import { DollarSign, Loader2 } from "lucide-react";
@@ -68,7 +69,7 @@ const NexusUnifiedBalance = () => {
             <AccordionItem
               key={token.symbol}
               value={token.symbol}
-              className="px-4 !shadow-[var(--ck-connectbutton-box-shadow)] !rounded-[var(--ck-connectbutton-border-radius)]"
+              className="px-4 shadow-(--ck-connectbutton-box-shadow)! rounded-(--ck-connectbutton-border-radius)!"
             >
               <AccordionTrigger className="hover:no-underline cursor-pointer">
                 <div className="flex items-center justify-between w-full pr-4">

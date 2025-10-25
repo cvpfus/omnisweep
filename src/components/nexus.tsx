@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NexusUnifiedBalance from "./unified-balance";
 import NexusBridge from "./bridge";
+import NexusSweep from "./sweep";
 
 export default function Nexus() {
   return (
@@ -9,6 +10,7 @@ export default function Nexus() {
         <TabsList>
           <TabsTrigger value="balance">Unified Balance</TabsTrigger>
           <TabsTrigger value="bridge">Send Tokens</TabsTrigger>
+          <TabsTrigger value="sweep">Sweep</TabsTrigger>
         </TabsList>
         <TabsContent value="balance" className="w-full items-center">
           <NexusUnifiedBalance />
@@ -18,6 +20,9 @@ export default function Nexus() {
           className="w-full items-center bg-transparent"
         >
           <NexusBridge />
+        </TabsContent>
+        <TabsContent value="sweep" className="w-full items-center bg-transparent">
+          <NexusSweep />
         </TabsContent>
       </Tabs>
     </div>

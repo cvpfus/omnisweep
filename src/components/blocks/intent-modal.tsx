@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useNexus } from "@/providers/NexusProvider";
 import {
   Dialog,
@@ -17,9 +18,14 @@ import { ArrowRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 
-const IntentModal = ({ intent }: { intent: OnIntentHookData }) => {
+const IntentModal = ({
+  intent,
+}: {
+  intent: OnIntentHookData;
+}) => {
   const { intentRefCallback } = useNexus();
   const { intent: intentData, refresh, allow, deny } = intent;
+
   const [open, setOpen] = useState(!!intent);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -248,7 +254,7 @@ const IntentModal = ({ intent }: { intent: OnIntentHookData }) => {
               disabled={isRefreshing}
               className={cn(
                 "font-semibold w-1/2",
-                isRefreshing && "bg-gray-500 cursor-not-allowed",
+                isRefreshing && "bg-gray-500 cursor-not-allowed"
               )}
             >
               {isRefreshing ? "Refreshing..." : "Allow"}

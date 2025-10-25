@@ -40,6 +40,7 @@ const NexusBridge = () => {
 
   const initiateBridge = async () => {
     if (!inputs.chain || !inputs.token || !inputs.amount) return;
+
     setIsLoading(true);
     try {
       const bridgeResult = await nexusSDK?.bridge({
@@ -71,12 +72,11 @@ const NexusBridge = () => {
             handleSelect={(chain) => {
               setInputs({ ...inputs, chain });
             }}
+            chainLabel="Destination Chain"
           />
           <TokenSelect
-            selectedChain={(
-              inputs?.chain ?? SUPPORTED_CHAINS.ETHEREUM
-            ).toString()}
             selectedToken={inputs?.token ?? "ETH"}
+            tokenLabel="Destination Token"
             handleTokenSelect={(token) => setInputs({ ...inputs, token })}
           />
           <div className="grid gap-3 w-full text-left">
