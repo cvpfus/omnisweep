@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable react-refresh/only-export-components */
 import useInitNexus from "@/hooks/useInitNexus";
 import {
   NexusSDK,
@@ -56,13 +55,13 @@ const NexusProvider = ({ children }: { children: React.ReactNode }) => {
     /**
      * Uncomment to initialize Nexus SDK as soon as wallet is connected
      */
-    // if (status === "connected") {
-    //   handleInit();
-    // }
+    if (status === "connected") {
+      handleInit();
+    }
     if (status === "disconnected") {
       deinitializeNexus();
     }
-  }, [status, deinitializeNexus]);
+  }, [status, deinitializeNexus, handleInit]);
 
   const value = useMemo(
     () => ({
