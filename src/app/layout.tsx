@@ -3,6 +3,7 @@ import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import Web3Provider from "@/providers/Web3Provider";
 import Header from "@/components/blocks/header";
+import Script from "next/script";
 
 const hankenGrotesk = Hanken_Grotesk({
   variable: "--font-hanken-grotesk",
@@ -30,6 +31,7 @@ export default function RootLayout({
           </div>
         </Web3Provider>
       </body>
+      <Script src="https://scripts.simpleanalyticscdn.com/latest.js"  />
     </html>
   );
 }
