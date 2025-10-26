@@ -14,10 +14,11 @@ import ChainSelect from "./blocks/chain-select";
 import { Button } from "./ui/button";
 import IntentModal from "./blocks/intent-modal";
 import useListenBridgeTransaction from "@/hooks/useListenBridgeTransactions";
-import { ArrowBigRight } from "lucide-react";
 import { SweepInput } from "@/types/sweep";
 import InputAmount from "./blocks/input-amount";
 import { cn } from "@/lib/utils";
+import useSimulateBridge from "@/hooks/useSimulateBridge";
+import { Loader2 } from "lucide-react";
 
 const NexusSweep = () => {
   const [input, setInput] = useState<SweepInput>({
@@ -30,7 +31,7 @@ const NexusSweep = () => {
 
   const { nexusSDK, intentRefCallback } = useNexus();
 
-  const { processing, explorerURL } = useListenBridgeTransaction();
+  useListenBridgeTransaction();
 
   const { data: unifiedBalance, isLoading: isLoadingBalance } =
     useFetchUnifiedBalanceByTokenSymbol(input, setInput);
@@ -38,6 +39,14 @@ const NexusSweep = () => {
   const [selectedPercentage, setSelectedPercentage] = useState<number | null>(
     null
   );
+
+  const { data: bridgeSimulationResult, isLoading: isLoadingSimulateBridge } =
+    useSimulateBridge({
+      token: input.token,
+      sourceChains: input.sourceChains,
+      amount: input.amount,
+      chainId: input.destinationChain as SUPPORTED_CHAINS_IDS,
+    });
 
   const tokenBreakdowns = unifiedBalance?.breakdown
     ?.filter((token) => parseFloat(token.balance) > 0)
@@ -237,7 +246,8 @@ const NexusSweep = () => {
                           </p>
                         </div>
                         <p className="text-muted-foreground text-xs">
-                          {parseFloat(token.balance).toFixed(6)} {input.token}
+                          {parseFloat(token.balance).toFixed(6)} {input.token}{" "}
+                          (${token.balanceInFiat?.toFixed(2)})
                         </p>
                       </div>
                     </Label>
@@ -247,7 +257,7 @@ const NexusSweep = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-y-2">
+          <div className="flex justify-between items-end mt-4">
             <ChainSelect
               selectedChain={input.destinationChain}
               handleSelect={(chain) =>
@@ -255,6 +265,30 @@ const NexusSweep = () => {
               }
               chainLabel="Destination Chain"
             />
+
+            {isLoadingSimulateBridge ? (
+              <div className="flex flex-col gap-y-1">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  "flex flex-col gap-y-1",
+                  bridgeSimulationResult?.intent?.fees?.total
+                    ? "visible"
+                    : "invisible"
+                )}
+              >
+                <p className="text-muted-foreground text-xs">Total Fees</p>
+                <p className="text-xs font-bold">
+                  {parseFloat(
+                    bridgeSimulationResult?.intent?.fees?.total ?? "0"
+                  ).toFixed(8)}{" "}
+                  {bridgeSimulationResult?.token?.symbol}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
 
@@ -266,38 +300,25 @@ const NexusSweep = () => {
             disabled={
               input.sourceChains.length === 0 ||
               input.destinationChain === null ||
-              isLoading
+              input.amount === 0 ||
+              (!isLoadingSimulateBridge && !bridgeSimulationResult) ||
+              isLoading ||
+              isLoadingSimulateBridge
             }
           >
-            Sweep
+            {(isLoadingSimulateBridge || isLoading) && (
+              <Loader2 className="size-4 animate-spin" />
+            )}
+            <span>
+              {input.amount === 0 && input.destinationChain === null
+                ? "Select Amount and Destination Chain"
+                : input.amount === 0
+                ? "Select Amount"
+                : input.destinationChain === null
+                ? "Select Destination Chain"
+                : "Sweep"}
+            </span>
           </Button>
-
-          <div className="flex items-center flex-col gap-y-3">
-            {intentRefCallback?.current?.intent && (
-              <>
-                <p className="font-semibold text-lg">
-                  Total Steps: {processing?.totalSteps}
-                </p>
-                <p className="font-semibold text-lg">
-                  Status: {processing?.statusText}
-                </p>
-                <p className="font-semibold text-lg">
-                  Progress: {processing?.currentStep}
-                </p>
-              </>
-            )}
-
-            {explorerURL && (
-              <a
-                href={explorerURL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline font-semibold flex items-center gap-x-2"
-              >
-                <ArrowBigRight className="size-5" /> View on Explorer
-              </a>
-            )}
-          </div>
         </CardFooter>
       </Card>
 
