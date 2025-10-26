@@ -45,7 +45,7 @@ const useInitNexus = (sdk: NexusSDK) => {
       // sources: an array of objects with minAllowance, chainID, token symbol, etc.
       // allow(allowances): continues the transaction flow with the specified allowances; `allowances` is an array with the chosen allowance for each of the requirements (allowances.length === sources.length), either 'min', 'max', a bigint or a string
       // deny(): stops the flow
-      console.log("allowance data", data);
+
       data.allow(data.sources.map((source) => source.allowance.minimum));
       allowanceRefCallback.current = data;
     });
@@ -58,7 +58,7 @@ const useInitNexus = (sdk: NexusSDK) => {
       // allow(): accept the current intent and continue the flow
       // deny(): deny the intent and stop the flow
       // refresh(): should be on a timer of 5s to refresh the intent (old intents might fail due to fee changes if not refreshed)
-      console.log("intent data", data);
+
       intentRefCallback.current = data;
     });
   };

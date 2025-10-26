@@ -1,4 +1,6 @@
 import { client } from "@/client";
+import { chains } from "@/providers/Web3Provider";
+import { defineChain } from "thirdweb";
 import { ConnectButton } from "thirdweb/react";
 import { createWallet } from "thirdweb/wallets";
 
@@ -16,11 +18,14 @@ const wallets = [
 ];
 
 const ConnectWallet = () => {
+  const thirdwebChains = chains.map((ch) => defineChain(ch.id));
+
   return (
     <ConnectButton
       client={client}
       connectModal={{ size: "compact" }}
       wallets={wallets}
+      chains={thirdwebChains}
     />
   );
 };

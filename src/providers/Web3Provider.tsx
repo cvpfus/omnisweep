@@ -10,34 +10,25 @@ import {
   avalanche,
   sophon,
   kaia,
-  sepolia,
-  baseSepolia,
-  arbitrumSepolia,
-  optimismSepolia,
-  polygonAmoy,
+  Chain,
 } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NexusProvider from "./NexusProvider";
 import { ThirdwebProvider } from "thirdweb/react";
 import { TransactionPopupProvider } from "@blockscout/app-sdk";
 
+export const chains: readonly [Chain, ...Chain[]] = [
+  mainnet,
+  base,
+  polygon,
+  arbitrum,
+  optimism,
+  scroll,
+  avalanche,
+];
+
 const config = createConfig({
-  chains: [
-    mainnet,
-    base,
-    polygon,
-    arbitrum,
-    optimism,
-    scroll,
-    avalanche,
-    sophon,
-    kaia,
-    sepolia,
-    baseSepolia,
-    arbitrumSepolia,
-    optimismSepolia,
-    polygonAmoy,
-  ],
+  chains,
   transports: {
     [mainnet.id]: http(mainnet.rpcUrls.default.http[0]),
     [arbitrum.id]: http(arbitrum.rpcUrls.default.http[0]),
@@ -48,11 +39,6 @@ const config = createConfig({
     [scroll.id]: http(scroll.rpcUrls.default.http[0]),
     [sophon.id]: http(sophon.rpcUrls.default.http[0]),
     [kaia.id]: http(kaia.rpcUrls.default.http[0]),
-    [sepolia.id]: http(sepolia.rpcUrls.default.http[0]),
-    [baseSepolia.id]: http(baseSepolia.rpcUrls.default.http[0]),
-    [arbitrumSepolia.id]: http(arbitrumSepolia.rpcUrls.default.http[0]),
-    [optimismSepolia.id]: http(optimismSepolia.rpcUrls.default.http[0]),
-    [polygonAmoy.id]: http(polygonAmoy.rpcUrls.default.http[0]),
   },
 });
 const queryClient = new QueryClient();

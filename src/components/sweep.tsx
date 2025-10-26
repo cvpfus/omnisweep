@@ -19,9 +19,8 @@ import { Checkbox } from "./ui/checkbox";
 import ChainSelect from "./blocks/chain-select";
 import { Button } from "./ui/button";
 import IntentModal from "./blocks/intent-modal";
-import useListenTransaction from "@/hooks/useListenTransactions";
+import useListenBridgeTransaction from "@/hooks/useListenBridgeTransactions";
 import { ArrowBigRight } from "lucide-react";
-import { allowance } from "thirdweb/extensions/erc20";
 
 interface SweepInput {
   token: SUPPORTED_TOKENS;
@@ -37,12 +36,9 @@ const NexusSweep = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const { nexusSDK, intentRefCallback, allowanceRefCallback } = useNexus();
+  const { nexusSDK, intentRefCallback } = useNexus();
 
-  const { processing, explorerURL } = useListenTransaction({
-    sdk: nexusSDK!,
-    type: "bridge",
-  });
+  const { processing, explorerURL } = useListenBridgeTransaction();
 
   const { data: unifiedBalance } = useFetchUnifiedBalanceByTokenSymbol(
     input.token
@@ -103,7 +99,7 @@ const NexusSweep = () => {
               return (
                 <Label
                   key={token.chain.id}
-                  className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[aria-checked=true]]:border-blue-600 has-[[aria-checked=true]]:bg-blue-50 dark:has-[[aria-checked=true]]:border-blue-900 dark:has-[[aria-checked=true]]:bg-blue-950"
+                  className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-aria-checked:border-blue-600 has-aria-checked:bg-blue-50 dark:has-aria-checked:border-blue-900 dark:has-aria-checked:bg-blue-950"
                 >
                   <Checkbox
                     checked={input.sourceChains.includes(
@@ -205,9 +201,7 @@ const NexusSweep = () => {
       </Card>
 
       {intentRefCallback?.current?.intent && (
-        <IntentModal
-          intent={intentRefCallback?.current}
-        />
+        <IntentModal intent={intentRefCallback?.current} />
       )}
     </div>
   );
