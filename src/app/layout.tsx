@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import Web3Provider from "@/providers/Web3Provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken-grotesk",
   subsets: ["latin"],
 });
 
@@ -26,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${hankenGrotesk.variable} antialiased`}
       >
         <Web3Provider>{children}</Web3Provider>
       </body>

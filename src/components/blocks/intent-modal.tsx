@@ -18,11 +18,7 @@ import { ArrowRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 
-const IntentModal = ({
-  intent,
-}: {
-  intent: OnIntentHookData;
-}) => {
+const IntentModal = ({ intent }: { intent: OnIntentHookData }) => {
   const { intentRefCallback } = useNexus();
   const { intent: intentData, refresh, allow, deny } = intent;
 
@@ -49,18 +45,18 @@ const IntentModal = ({
     setOpen(false);
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refresh();
-    setIsRefreshing(false);
-  };
-
   useEffect(() => {
+    const handleRefresh = async () => {
+      setIsRefreshing(true);
+      await refresh();
+      setIsRefreshing(false);
+    };
+
     const interval = setInterval(() => {
       handleRefresh();
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refresh]);
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleDeny()}>
       <DialogContent className="gap-y-3">
@@ -114,7 +110,7 @@ const IntentModal = ({
                   )}
               </div>
 
-              <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
 
               {intentData.token && intentData.token.logo && (
                 <img
@@ -129,7 +125,7 @@ const IntentModal = ({
                 />
               )}
 
-              <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
 
               {/* Destination Chain */}
               <div className="flex flex-col justify-center items-center gap-y-1 px-3 py-2 flex-1">

@@ -55,9 +55,9 @@ const NexusProvider = ({ children }: { children: React.ReactNode }) => {
     /**
      * Uncomment to initialize Nexus SDK as soon as wallet is connected
      */
-    // if (status === "connected") {
-    //   handleInit();
-    // }
+    if (status === "connected") {
+      handleInit();
+    }
     if (status === "disconnected") {
       deinitializeNexus();
     }

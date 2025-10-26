@@ -203,6 +203,7 @@ const useListenBridgeTransaction = () => {
         "explorerURL" in stepData.data
       ) {
         setExplorerURL(stepData.data.explorerURL as string);
+        console.log("stepdata", stepData);
       }
     };
 

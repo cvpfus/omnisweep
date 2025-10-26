@@ -11,18 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Label } from "../ui/label";
 
 const TokenSelect = ({
   selectedToken,
   handleTokenSelect,
   disabled = false,
-  tokenLabel,
 }: {
   selectedToken?: SUPPORTED_TOKENS;
   handleTokenSelect: (token: SUPPORTED_TOKENS) => void;
   disabled?: boolean;
-  tokenLabel: string;
 }) => {
   const tokenData = TOKEN_METADATA;
   const selectedTokenData = Object.entries(tokenData)?.find(([, token]) => {
@@ -36,18 +33,15 @@ const TokenSelect = ({
       }
     >
       <div className="flex flex-col items-start gap-y-1">
-        {tokenLabel && (
-          <Label className="text-sm font-semibold">{tokenLabel}</Label>
-        )}
-        <SelectTrigger disabled={disabled}>
+        <SelectTrigger disabled={disabled} size="sm">
           <SelectValue placeholder="Select a token">
             {selectedTokenData && (
               <div className="flex items-center gap-x-2">
                 <img
                   src={selectedTokenData[1].icon}
                   alt={selectedTokenData[1].symbol}
-                  width={24}
-                  height={24}
+                  width={16}
+                  height={16}
                   className="rounded-full"
                 />
                 {selectedToken}
@@ -70,9 +64,7 @@ const TokenSelect = ({
                   className="rounded-full"
                 />
                 <div className="flex flex-col">
-                  <span>
-                    {token.symbol}
-                  </span>
+                  <span>{token.symbol}</span>
                 </div>
               </div>
             </SelectItem>

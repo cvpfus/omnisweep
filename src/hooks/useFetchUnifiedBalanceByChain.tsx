@@ -9,7 +9,12 @@ const useFetchUnifiedBalanceByTokenSymbol = (tokenSymbol: SUPPORTED_TOKENS) => {
     queryKey: ["unified-balance", tokenSymbol],
     queryFn: async () => {
       const balance = await nexusSDK?.getUnifiedBalances();
-      return balance?.filter((token) => token.symbol === tokenSymbol)?.[0];
+
+      const filteredTokenBalances = balance?.filter(
+        (token) => token.symbol === tokenSymbol
+      )?.[0];
+
+      return filteredTokenBalances;
     },
     enabled: !!nexusSDK,
   });

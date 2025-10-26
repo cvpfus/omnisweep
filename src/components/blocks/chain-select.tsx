@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import {
   type SUPPORTED_CHAINS_IDS,
-  TESTNET_CHAINS,
   MAINNET_CHAINS,
   CHAIN_METADATA,
 } from "@avail-project/nexus-core";
@@ -19,7 +18,7 @@ const ChainSelect = ({
   selectedChain,
   handleSelect,
   disabled = false,
-  chainLabel
+  chainLabel,
 }: {
   selectedChain: SUPPORTED_CHAINS_IDS;
   handleSelect: (chainId: SUPPORTED_CHAINS_IDS) => void;
@@ -51,7 +50,7 @@ const ChainSelect = ({
                   height={24}
                   className="rounded-full"
                 />
-                <p className="text-primary test-sm">
+                <p className="text-sm">
                   {CHAIN_METADATA[selectedChain]?.name}
                 </p>
               </div>
@@ -73,7 +72,7 @@ const ChainSelect = ({
                     height={24}
                     className="rounded-full"
                   />
-                  <p className="text-primary test-sm">
+                  <p className="text-sm">
                     {chainData[chainId]?.name}
                   </p>
                 </div>

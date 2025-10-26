@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useNexus } from "@/providers/NexusProvider";
 import {
   Card,
@@ -7,12 +8,11 @@ import {
   CardTitle,
 } from "./ui/card";
 import {
-  SUPPORTED_TOKENS,
+  CHAIN_METADATA,
   SUPPORTED_CHAINS,
   SUPPORTED_CHAINS_IDS,
 } from "@avail-project/nexus-core";
 import { useState } from "react";
-import TokenSelect from "./blocks/token-select";
 import useFetchUnifiedBalanceByTokenSymbol from "@/hooks/useFetchUnifiedBalanceByChain";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
@@ -21,12 +21,10 @@ import { Button } from "./ui/button";
 import IntentModal from "./blocks/intent-modal";
 import useListenBridgeTransaction from "@/hooks/useListenBridgeTransactions";
 import { ArrowBigRight } from "lucide-react";
-
-interface SweepInput {
-  token: SUPPORTED_TOKENS;
-  destinationChain: SUPPORTED_CHAINS_IDS;
-  sourceChains: SUPPORTED_CHAINS_IDS[];
-}
+import { useNotification } from "@blockscout/app-sdk";
+import { useAccount } from "wagmi";
+import { SweepInput } from "@/types/sweep";
+import InputAmount from "./blocks/input-amount";
 
 const NexusSweep = () => {
   const [input, setInput] = useState<SweepInput>({
@@ -44,9 +42,19 @@ const NexusSweep = () => {
     input.token
   );
 
-  const tokenBalances = unifiedBalance?.breakdown?.filter(
-    (token) => parseFloat(token.balance) > 0
-  );
+  const account = useAccount();
+
+  const { openTxToast } = useNotification();
+
+  const tokenBreakdowns = unifiedBalance?.breakdown
+    ?.filter((token) => parseFloat(token.balance) > 0)
+    ?.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance));
+
+  const totalSelectedBalance = tokenBreakdowns
+    ?.filter((token) =>
+      input.sourceChains.includes(token.chain.id as SUPPORTED_CHAINS_IDS)
+    )
+    ?.reduce((acc, token) => acc + parseFloat(token.balance), 0);
 
   const handleSweep = async () => {
     if (
@@ -59,7 +67,7 @@ const NexusSweep = () => {
     setIsLoading(true);
 
     try {
-      const amount = tokenBalances
+      const amount = tokenBreakdowns
         ?.filter((token) =>
           input.sourceChains.includes(token.chain.id as SUPPORTED_CHAINS_IDS)
         )
@@ -73,6 +81,16 @@ const NexusSweep = () => {
       });
 
       console.log("sweep result", sweepResult);
+
+      if (
+        sweepResult?.success &&
+        account.chainId &&
+        sweepResult.transactionHash
+      ) {
+        console.log(sweepResult.transactionHash);
+
+        openTxToast(account.chainId?.toString(), sweepResult.transactionHash);
+      }
     } catch (error) {
       console.error("Error while sweeping:", error);
     } finally {
@@ -82,24 +100,31 @@ const NexusSweep = () => {
   };
 
   return (
-    <div>
+    <div className="w-full max-w-md">
       <Card>
         <CardHeader>
           <CardTitle>Sweep</CardTitle>
         </CardHeader>
-        <CardContent>
-          <TokenSelect
-            selectedToken={input.token}
-            tokenLabel="Token"
-            handleTokenSelect={(token) => setInput({ ...input, token })}
-          />
-
-          <div className="flex flex-col gap-y-2">
-            {tokenBalances?.map((token) => {
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-y-1">
+            <InputAmount
+              selectedToken={input.token}
+              handleTokenSelect={(token) => setInput({ ...input, token })}
+            />
+            {!!totalSelectedBalance && totalSelectedBalance > 0 && (
+              <div className="flex items-center justify-between">
+                <p className="text-muted-foreground text-sm">
+                  Unified Balance: {totalSelectedBalance?.toFixed(6)}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {tokenBreakdowns?.map((token) => {
               return (
                 <Label
                   key={token.chain.id}
-                  className="hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-aria-checked:border-blue-600 has-aria-checked:bg-blue-50 dark:has-aria-checked:border-blue-900 dark:has-aria-checked:bg-blue-950"
+                  className="cursor-pointer hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10"
                 >
                   <Checkbox
                     checked={input.sourceChains.includes(
@@ -133,12 +158,21 @@ const NexusSweep = () => {
                         });
                       }
                     }}
-                    className="data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700"
+                    className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                   />
                   <div className="grid gap-1.5 font-normal">
-                    <p className="text-sm leading-none font-medium">
-                      {token.chain.name}
-                    </p>
+                    <div className="flex items-center gap-x-2">
+                      <img
+                        src={CHAIN_METADATA[token.chain.id]?.logo}
+                        alt={token.chain.name}
+                        width={14}
+                        height={14}
+                        className="rounded-full"
+                      />
+                      <p className="text-sm leading-none font-medium">
+                        {token.chain.name}
+                      </p>
+                    </div>
                     <p className="text-muted-foreground text-sm">
                       {parseFloat(token.balance).toFixed(6)} {input.token}
                     </p>
@@ -161,6 +195,8 @@ const NexusSweep = () => {
 
         <CardFooter>
           <Button
+            size={"lg"}
+            className="w-full"
             onClick={handleSweep}
             disabled={
               input.sourceChains.length === 0 ||
