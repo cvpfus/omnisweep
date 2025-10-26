@@ -7,10 +7,13 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCcw,
+  ExternalLink,
 } from "lucide-react";
 import { useNexus } from "@/providers/NexusProvider";
 import { CHAIN_METADATA, TOKEN_METADATA } from "@avail-project/nexus-core";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
+import { useState } from "react";
 
 type IntentStatus = "SUCCESS" | "PENDING" | "FAILED" | "REFUNDED";
 
@@ -65,9 +68,12 @@ const StatusBadge = ({ status }: { status: IntentStatus }) => {
   );
 };
 
+const ITEMS_PER_PAGE = 5;
+
 const Transactions = () => {
   const { data: intents, isLoading, isError } = useGetIntents();
   const { nexusSDK } = useNexus();
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const formatTimestamp = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleString();
@@ -82,6 +88,13 @@ const Transactions = () => {
       .padStart(decimals, "0")
       .slice(0, 6);
     return `${integerPart}.${fractionalStr}`;
+  };
+
+  const visibleIntents = intents?.slice(0, visibleCount);
+  const hasMore = intents && intents.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
   };
 
   return (
@@ -111,9 +124,9 @@ const Transactions = () => {
       )}
 
       <div className="flex flex-col gap-y-3">
-        {intents &&
-          intents.length > 0 &&
-          intents.map((intent) => {
+        {visibleIntents &&
+          visibleIntents.length > 0 &&
+          visibleIntents.map((intent) => {
             const status = getIntentStatus(intent);
             const firstSource = intent.sources?.[0];
             const tokenInfo = firstSource
@@ -138,9 +151,19 @@ const Transactions = () => {
             return (
               <Card key={intent.id}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-base font-medium">
-                    Intent #{intent.id}
-                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base font-medium">
+                      Intent #{intent.id}
+                    </CardTitle>
+                    <a
+                      href={`https://explorer.nexus.availproject.org/intent/${intent.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
                   <StatusBadge status={status} />
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -214,6 +237,14 @@ const Transactions = () => {
             );
           })}
       </div>
+
+      {hasMore && !isLoading && (
+        <div className="flex justify-center mt-4">
+          <Button onClick={handleLoadMore} variant="outline">
+            Load More
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
