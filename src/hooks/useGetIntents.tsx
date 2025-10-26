@@ -1,13 +1,13 @@
 import { useNexus } from "@/providers/NexusProvider";
 import { useQuery } from "@tanstack/react-query";
 
-const useGetIntents = () => {
+const useGetIntents = (page = 1) => {
   const { nexusSDK } = useNexus();
 
   return useQuery({
-    queryKey: ["intents"],
+    queryKey: ["intents", page],
     queryFn: async () => {
-      const intents = await nexusSDK?.getMyIntents(1);
+      const intents = await nexusSDK?.getMyIntents(page);
       return intents;
     },
     enabled: !!nexusSDK,

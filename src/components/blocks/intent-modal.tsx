@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import { useNexus } from "@/providers/NexusProvider";
 import {
   Dialog,
   DialogContent,
@@ -8,253 +7,135 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
 import {
   CHAIN_METADATA,
+  ProgressStep,
   type OnIntentHookData,
 } from "@avail-project/nexus-core";
-import { useEffect, useState } from "react";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Label } from "../ui/label";
+import { ProcessingState } from "@/hooks/useListenBridgeTransactions";
+import { getStatusText } from "@/lib/utils";
+import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Separator } from "../ui/separator";
+import { useNexus } from "@/providers/NexusProvider";
 
-const IntentModal = ({ intent }: { intent: OnIntentHookData }) => {
+const IntentModal = ({
+  intent,
+  processing,
+  resetProcessingState,
+}: {
+  intent: OnIntentHookData;
+  processing: ProcessingState;
+  resetProcessingState: () => void;
+}) => {
+  const { intent: intentData } = intent;
+
   const { intentRefCallback } = useNexus();
-  const { intent: intentData, refresh, allow, deny } = intent;
 
-  const [open, setOpen] = useState(!!intent);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [open, setOpen] = useState(true);
 
-  const formatCost = (cost: string) => {
-    const numCost = parseFloat(cost);
-    if (numCost === 0) return "Free";
-    if (numCost < 0.001) return "< 0.001";
-    return numCost.toFixed(6);
-  };
-
-  const handleAllow = () => {
-    if (isRefreshing) return;
-    allow();
-    setOpen(false);
-  };
-
-  const handleDeny = () => {
-    console.log("deny called", intentRefCallback.current);
-    deny();
-    intentRefCallback.current = null;
-    setOpen(false);
-  };
-
-  useEffect(() => {
-    const handleRefresh = async () => {
-      setIsRefreshing(true);
-      await refresh();
-      setIsRefreshing(false);
-    };
-
-    const interval = setInterval(() => {
-      handleRefresh();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [refresh]);
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleDeny()}>
-      <DialogContent className="gap-y-3">
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+
+        if (!isOpen) {
+          resetProcessingState();
+          intentRefCallback.current = null;
+        }
+      }}
+    >
+      <DialogContent
+        className="gap-y-3"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Confirm Transaction
+            Sweep Details
           </DialogTitle>
           <DialogDescription>
-            Please review the details of this transaction carefully.
+            Please wait while we process your sweep. Do not close this window.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-1 py-2">
-          {/* Transaction Route */}
-          <div className="space-y-3">
-            <div className="flex flex-col sm:flex-row items-center gap-1 text-xs">
-              {/* Multiple Source Chains */}
-              <div className="flex flex-col gap-y-2 flex-1">
-                {intentData.sources &&
-                  intentData.sources.map((source, index) => (
-                    <div
-                      key={`${source.chainID}-${index}`}
-                      className="flex flex-col justify-center items-center gap-y-1 px-3 py-2"
-                    >
-                      <img
-                        src={CHAIN_METADATA[source.chainID]?.logo ?? ""}
-                        alt={source.chainName ?? ""}
-                        width={24}
-                        height={24}
-                        className="rounded-full"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                      <div className="flex items-center gap-x-2">
-                        <div className="text-foreground font-bold text-center text-sm">
-                          {source.amount} {intentData.token?.symbol}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                {/* Show total if multiple sources */}
-                {intentData.sources &&
-                  intentData.sources.length > 1 &&
-                  intentData.sourcesTotal && (
-                    <div className="text-xs text-center text-muted-foreground font-bold border-t border-muted pt-2">
-                      Total: {intentData.sourcesTotal}{" "}
-                      {intentData.token?.symbol}
-                    </div>
-                  )}
-              </div>
-
-              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
-
-              {intentData.token && intentData.token.logo && (
+        <div className="grid grid-cols-2 gap-x-4 pt-4">
+          <div className="flex flex-col gap-y-1">
+            <Label>Source Chains</Label>
+            <div className="flex flex-wrap items-center gap-x-2">
+              {intentData.sources.map((source) => (
                 <img
-                  src={intentData.token.logo}
-                  alt={intentData.token.symbol}
-                  className="rounded-full"
+                  key={source.chainID}
+                  src={CHAIN_METADATA[source?.chainID]?.logo}
+                  alt={CHAIN_METADATA[source?.chainID]?.name}
                   width={24}
                   height={24}
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
+                  className="rounded-full"
                 />
-              )}
-
-              <ArrowRight className="w-5 h-5 text-muted-foreground shrink-0" />
-
-              {/* Destination Chain */}
-              <div className="flex flex-col justify-center items-center gap-y-1 px-3 py-2 flex-1">
-                {intentData.destination && (
-                  <>
-                    <img
-                      src={
-                        CHAIN_METADATA[intentData.destination.chainID]?.logo ??
-                        ""
-                      }
-                      alt={intentData.destination.chainName ?? ""}
-                      width={24}
-                      height={24}
-                      className="rounded-full"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                    <div className="text-foreground font-bold text-center text-sm">
-                      {intentData.destination.amount} {intentData.token?.symbol}
-                    </div>
-                  </>
-                )}
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Fees Section */}
-          {intentData.fees && (
-            <div className="space-y-3 mt-6">
-              <div className="p-4 space-y-3">
-                {/* Individual Fees */}
-                <div className="space-y-2 font-semibold">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Network Gas
-                    </span>
-                    <span className="text-sm">
-                      {formatCost(intentData.fees.caGas ?? "0")}{" "}
-                      {intentData.token?.symbol}
-                    </span>
-                  </div>
-
-                  {intentData.fees.solver &&
-                    parseFloat(intentData.fees.solver) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          Solver Fee
-                        </span>
-                        <span className="text-sm">
-                          {formatCost(intentData.fees.solver)}{" "}
-                          {intentData.token?.symbol}
-                        </span>
-                      </div>
-                    )}
-
-                  {intentData.fees.protocol &&
-                    parseFloat(intentData.fees.protocol) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          Protocol Fee
-                        </span>
-                        <span className="text-sm font-medium">
-                          {formatCost(intentData.fees.protocol)}{" "}
-                          {intentData.token?.symbol}
-                        </span>
-                      </div>
-                    )}
-
-                  {intentData.fees.gasSupplied &&
-                    parseFloat(intentData.fees.gasSupplied) > 0 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">
-                          Additional Gas
-                        </span>
-                        <span className="text-sm font-medium">
-                          {formatCost(intentData.fees.gasSupplied)}{" "}
-                          {intentData.token?.symbol}
-                        </span>
-                      </div>
-                    )}
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold">
-                      Total Gas Cost
-                    </span>
-                    <span className="text-sm font-bold">
-                      {formatCost(intentData.fees.total ?? "0")}{" "}
-                      {intentData.token?.symbol}
-                    </span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Total Cost */}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-primary">
-                    Total Cost
-                  </span>
-                  <span className="text-sm font-bold text-primary">
-                    {formatCost(intentData.sourcesTotal ?? "0")}{" "}
-                    {intentData.token?.symbol}
-                  </span>
-                </div>
-              </div>
+          <div className="flex flex-col gap-y-1">
+            <Label>Destination Chain</Label>
+            <div className="flex items-center gap-x-2">
+              <img
+                src={CHAIN_METADATA[intentData?.destination?.chainID]?.logo}
+                alt={CHAIN_METADATA[intentData?.destination?.chainID]?.name}
+                width={24}
+                height={24}
+                className="rounded-full"
+              />
             </div>
-          )}
+          </div>
         </div>
 
-        <DialogFooter className="w-11/12 pt-4 mx-auto">
-          <div className="flex w-full justify-center items-center gap-4">
-            <Button
-              variant={"destructive"}
-              onClick={handleDeny}
-              className="bg-destructive/50 font-semibold w-1/2"
-            >
-              Deny
-            </Button>
-            <Button
-              onClick={handleAllow}
-              disabled={isRefreshing}
-              className={cn(
-                "font-semibold w-1/2",
-                isRefreshing && "bg-gray-500 cursor-not-allowed"
-              )}
-            >
-              {isRefreshing ? "Refreshing..." : "Allow"}
-            </Button>
+        <DialogFooter className="pt-4 w-full">
+          <div className="flex flex-col gap-y-3 w-full">
+            {processing.steps.map((step, index) => {
+              const isCurrentStep = index === processing.currentStep;
+              const isCompleted = step.completed;
+
+              return (
+                <div key={step.id} className="flex items-center gap-x-3">
+                  <div
+                    className={cn(
+                      "flex items-center justify-center w-6 h-6 rounded-full shrink-0 transition-colors",
+                      isCompleted
+                        ? "bg-green-500 text-white"
+                        : isCurrentStep
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground border border-border"
+                    )}
+                  >
+                    {isCompleted ? (
+                      <Check className="w-4 h-4" />
+                    ) : isCurrentStep ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <span className="text-xs font-medium">{index + 1}</span>
+                    )}
+                  </div>
+                  <p
+                    className={cn(
+                      "text-sm transition-colors",
+                      isCompleted
+                        ? "text-muted-foreground line-through"
+                        : isCurrentStep
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {getStatusText(
+                      (step.stepData as ProgressStep)?.type,
+                      "bridge"
+                    )}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </DialogFooter>
       </DialogContent>

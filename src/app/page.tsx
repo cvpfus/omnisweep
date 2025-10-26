@@ -1,21 +1,21 @@
 "use client";
 
-import Header from "@/components/blocks/header";
 import Nexus from "@/components/nexus";
-import useGetIntents from "@/hooks/useGetIntents";
+import ConnectWalletCard from "@/components/connect-wallet-card";
 import { useNexus } from "@/providers/NexusProvider";
+import { useAccount } from "wagmi";
+import InitializeNexusCard from "@/components/initialize-nexus-card";
 
 export default function Home() {
-  const { nexusSDK } = useNexus();
+  const { nexusSDK, isInitError } = useNexus();
 
-  const { data: intents } = useGetIntents();
-
-  console.log("intents", intents);
+  const { isConnected } = useAccount();
 
   return (
-    <div className="flex flex-col items-center justify-items-center min-h-screen p-6 gap-y-6">
-      <Header />
-      {nexusSDK?.isInitialized() && <Nexus />}
-    </div>
+    <>
+      {!isConnected && <ConnectWalletCard />}
+      {isConnected && nexusSDK?.isInitialized() && <Nexus />}
+      {isInitError && <InitializeNexusCard />}
+    </>
   );
 }

@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import Web3Provider from "@/providers/Web3Provider";
+import Header from "@/components/blocks/header";
 
 const hankenGrotesk = Hanken_Grotesk({
   variable: "--font-hanken-grotesk",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -20,10 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${hankenGrotesk.variable} antialiased`}
-      >
-        <Web3Provider>{children}</Web3Provider>
+      <body className={`${hankenGrotesk.variable} antialiased`}>
+        <Web3Provider>
+          <div className="flex flex-col items-center justify-items-center min-h-screen p-6 gap-y-12">
+            <Header />
+            {children}
+          </div>
+        </Web3Provider>
       </body>
     </html>
   );

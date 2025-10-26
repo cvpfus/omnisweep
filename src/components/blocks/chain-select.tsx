@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Label } from "../ui/label";
+import { chains } from "@/providers/Web3Provider";
 
 const ChainSelect = ({
   selectedChain,
@@ -25,7 +26,10 @@ const ChainSelect = ({
   chainLabel: string;
   disabled?: boolean;
 }) => {
-  const chains = MAINNET_CHAINS;
+  const destinationChains = MAINNET_CHAINS.filter((chainId) =>
+    chains.map((c) => c.id).includes(chainId)
+  );
+  
   const chainData = CHAIN_METADATA;
   return (
     <Select
@@ -59,7 +63,7 @@ const ChainSelect = ({
 
       <SelectContent>
         <SelectGroup>
-          {chains.map((chainId) => {
+          {destinationChains.map((chainId) => {
             return (
               <SelectItem key={chainId} value={chainId.toString()}>
                 <div className="flex items-center gap-x-2 my-1">

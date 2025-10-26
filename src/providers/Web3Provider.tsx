@@ -8,8 +8,7 @@ import {
   polygon,
   scroll,
   avalanche,
-  sophon,
-  kaia,
+  bsc,
   Chain,
 } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -28,6 +27,7 @@ export const chains: readonly [Chain, ...Chain[]] = [
   optimism,
   scroll,
   avalanche,
+  bsc,
 ];
 
 const config = createConfig({
@@ -40,8 +40,7 @@ const config = createConfig({
     [polygon.id]: http(polygon.rpcUrls.default.http[0]),
     [avalanche.id]: http(avalanche.rpcUrls.default.http[0]),
     [scroll.id]: http(scroll.rpcUrls.default.http[0]),
-    [sophon.id]: http(sophon.rpcUrls.default.http[0]),
-    [kaia.id]: http(kaia.rpcUrls.default.http[0]),
+    [bsc.id]: http(bsc.rpcUrls.default.http[0]),
   },
 });
 const queryClient = new QueryClient();

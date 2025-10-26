@@ -19,6 +19,7 @@ interface NexusContextType {
   intentRefCallback: React.RefObject<OnIntentHookData | null>;
   allowanceRefCallback: React.RefObject<OnAllowanceHookData | null>;
   handleInit: () => Promise<void>;
+  isInitError: boolean;
 }
 
 const NexusContext = createContext<NexusContextType | null>(null);
@@ -30,7 +31,7 @@ const NexusProvider = ({ children }: { children: React.ReactNode }) => {
         network: "mainnet",
         debug: true,
       }),
-    [],
+    []
   );
   const { status } = useAccount();
   const {
@@ -40,6 +41,7 @@ const NexusProvider = ({ children }: { children: React.ReactNode }) => {
     attachEventHooks,
     intentRefCallback,
     allowanceRefCallback,
+    isInitError,
   } = useInitNexus(sdk);
 
   const handleInit = useCallback(async () => {
@@ -69,8 +71,9 @@ const NexusProvider = ({ children }: { children: React.ReactNode }) => {
       intentRefCallback,
       allowanceRefCallback,
       handleInit,
+      isInitError,
     }),
-    [nexusSDK, intentRefCallback, allowanceRefCallback, handleInit],
+    [nexusSDK, intentRefCallback, allowanceRefCallback, handleInit, isInitError]
   );
 
   return (

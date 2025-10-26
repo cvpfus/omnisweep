@@ -2,10 +2,11 @@ import { useNexus } from "@/providers/NexusProvider";
 import { SweepInput } from "@/types/sweep";
 import { SUPPORTED_CHAINS_IDS } from "@avail-project/nexus-core";
 import { useQuery } from "@tanstack/react-query";
+import { Dispatch, SetStateAction } from "react";
 
 const useFetchUnifiedBalanceByTokenSymbol = (
   input: SweepInput,
-  setInput: (input: SweepInput) => void
+  setInput: Dispatch<SetStateAction<SweepInput>>
 ) => {
   const { nexusSDK } = useNexus();
 
@@ -23,12 +24,19 @@ const useFetchUnifiedBalanceByTokenSymbol = (
       );
 
       if (!!tokenBreakdowns && tokenBreakdowns.length > 0) {
-        setInput({
-          ...input,
+        setInput((prevInput) => ({
+          ...prevInput,
           sourceChains: tokenBreakdowns.map(
             (token) => token.chain.id as SUPPORTED_CHAINS_IDS
           ),
-        });
+        }));
+      }
+
+      if (!tokenBreakdowns || tokenBreakdowns?.length === 0) {
+        setInput((prevInput) => ({
+          ...prevInput,
+          sourceChains: [],
+        }));
       }
 
       return filteredTokenAssets;

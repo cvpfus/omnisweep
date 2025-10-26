@@ -26,6 +26,7 @@ const ConnectWallet = () => {
       connectModal={{ size: "compact" }}
       wallets={wallets}
       chains={thirdwebChains}
+      theme={"light"}
     />
   );
 };

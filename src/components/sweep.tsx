@@ -31,7 +31,7 @@ const NexusSweep = () => {
 
   const { nexusSDK, intentRefCallback } = useNexus();
 
-  useListenBridgeTransaction();
+  const { processing, resetProcessingState } = useListenBridgeTransaction();
 
   const { data: unifiedBalance, isLoading: isLoadingBalance } =
     useFetchUnifiedBalanceByTokenSymbol(input, setInput);
@@ -75,17 +75,21 @@ const NexusSweep = () => {
     setIsLoading(true);
 
     try {
-      await nexusSDK?.bridge({
+      const result = await nexusSDK?.bridge({
         token: input.token,
         sourceChains: input.sourceChains,
         amount: input.amount,
         chainId: input.destinationChain,
       });
+
+      if (!result?.success) {
+        resetProcessingState();
+        intentRefCallback.current = null;
+      }
     } catch (error) {
       console.error("Error while sweeping:", error);
     } finally {
       setIsLoading(false);
-      intentRefCallback.current = null;
     }
   };
 
@@ -97,15 +101,17 @@ const NexusSweep = () => {
       setSelectedPercentage(null);
 
       if (checked && !input.sourceChains.includes(chainId)) {
-        setInput({
-          ...input,
-          sourceChains: [...input.sourceChains, chainId],
-        });
+        setInput((prevInput) => ({
+          ...prevInput,
+          sourceChains: [...prevInput.sourceChains, chainId],
+        }));
       } else if (!checked && input.sourceChains.includes(chainId)) {
-        setInput({
-          ...input,
-          sourceChains: input.sourceChains.filter((chain) => chain !== chainId),
-        });
+        setInput((prevInput) => ({
+          ...prevInput,
+          sourceChains: prevInput.sourceChains.filter(
+            (chain) => chain !== chainId
+          ),
+        }));
       }
     }
   };
@@ -117,10 +123,10 @@ const NexusSweep = () => {
 
     if (input.sourceChains.length === allChainIds.length) {
       // Deselect all
-      setInput({ ...input, sourceChains: [] });
+      setInput((prevInput) => ({ ...prevInput, sourceChains: [] }));
     } else {
       // Select all
-      setInput({ ...input, sourceChains: allChainIds });
+      setInput((prevInput) => ({ ...prevInput, sourceChains: allChainIds }));
     }
     setSelectedPercentage(null);
   };
@@ -132,13 +138,22 @@ const NexusSweep = () => {
           <div className="flex flex-col gap-y-1">
             <InputAmount
               selectedToken={input.token}
-              handleTokenSelect={(token) => setInput({ ...input, token })}
+              handleTokenSelect={(token) => {
+                setInput((prevInput) => ({
+                  ...prevInput,
+                  token,
+                  amount: 0,
+                  destinationChain: null,
+                }));
+
+                setSelectedPercentage(null);
+              }}
               value={input.amount}
               handleValueChange={(value) => {
-                setInput({
-                  ...input,
+                setInput((prevInput) => ({
+                  ...prevInput,
                   amount: parseFloat(value) || 0,
-                });
+                }));
                 setSelectedPercentage(null);
               }}
             />
@@ -163,11 +178,11 @@ const NexusSweep = () => {
                     className="text-xs"
                     onClick={() => {
                       setSelectedPercentage(percentage);
-                      setInput({
-                        ...input,
+                      setInput((prevInput) => ({
+                        ...prevInput,
                         amount:
                           (totalSelectedBalance ?? 0) * (percentage / 100),
-                      });
+                      }));
                     }}
                   >
                     {percentage}%
@@ -183,18 +198,26 @@ const NexusSweep = () => {
           <div className="flex flex-col gap-y-1">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">Source Chains</Label>
-              <Button
-                size="xs"
-                variant="ghost"
-                className="text-xs h-6"
-                onClick={handleSelectAllChains}
-              >
-                {input.sourceChains.length === tokenBreakdowns?.length
-                  ? "Deselect All"
-                  : "Select All"}
-              </Button>
+              {!!tokenBreakdowns && tokenBreakdowns?.length > 0 && (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  className="text-xs h-6"
+                  onClick={handleSelectAllChains}
+                >
+                  {input.sourceChains.length === tokenBreakdowns?.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-1.5">
+              {!isLoadingBalance &&
+                (!tokenBreakdowns || tokenBreakdowns?.length === 0) && (
+                  <p className="text-muted-foreground text-xs">
+                    No tokens found on any source chains.
+                  </p>
+                )}
               {isLoadingBalance ? (
                 <>
                   {[1, 2, 3, 4].map((i) => (
@@ -260,9 +283,12 @@ const NexusSweep = () => {
           <div className="flex justify-between items-end mt-4">
             <ChainSelect
               selectedChain={input.destinationChain}
-              handleSelect={(chain) =>
-                setInput({ ...input, destinationChain: chain })
-              }
+              handleSelect={(chain) => {
+                setInput((prevInput) => ({
+                  ...prevInput,
+                  destinationChain: chain,
+                }));
+              }}
               chainLabel="Destination Chain"
             />
 
@@ -323,7 +349,11 @@ const NexusSweep = () => {
       </Card>
 
       {intentRefCallback?.current?.intent && (
-        <IntentModal intent={intentRefCallback?.current} />
+        <IntentModal
+          intent={intentRefCallback?.current}
+          processing={processing}
+          resetProcessingState={resetProcessingState}
+        />
       )}
     </div>
   );

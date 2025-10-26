@@ -14,9 +14,11 @@ const useInitNexus = (sdk: NexusSDK) => {
   const [nexusSDK, setNexusSDK] = useState<NexusSDK | null>(null);
   const intentRefCallback = useRef<OnIntentHookData | null>(null);
   const allowanceRefCallback = useRef<OnAllowanceHookData | null>(null);
+  const [isInitError, setIsInitError] = useState(false);
 
   const initializeNexus = async () => {
     try {
+      setIsInitError(false);
       if (sdk.isInitialized()) throw new Error("Nexus is already initialized");
       const provider = (await connector?.getProvider()) as EthereumProvider;
       if (!provider) throw new Error("No provider found");
@@ -24,6 +26,7 @@ const useInitNexus = (sdk: NexusSDK) => {
       setNexusSDK(sdk);
     } catch (error) {
       console.error("Error initializing Nexus:", error);
+      setIsInitError(true);
     }
   };
 
@@ -59,6 +62,7 @@ const useInitNexus = (sdk: NexusSDK) => {
       // deny(): deny the intent and stop the flow
       // refresh(): should be on a timer of 5s to refresh the intent (old intents might fail due to fee changes if not refreshed)
 
+      data.allow();
       intentRefCallback.current = data;
     });
   };
@@ -70,6 +74,7 @@ const useInitNexus = (sdk: NexusSDK) => {
     attachEventHooks,
     intentRefCallback,
     allowanceRefCallback,
+    isInitError,
   };
 };
 
