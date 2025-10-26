@@ -7,10 +7,7 @@ const useSimulateBridge = (params: BridgeParams) => {
   return useQuery({
     queryKey: ["simulate-bridge", params],
     queryFn: async () => {
-      console.log("refreshing");
       const result = await nexusSDK?.simulateBridge(params);
-
-      console.log("simulation result", result);
 
       return result;
     },

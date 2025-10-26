@@ -16,7 +16,7 @@ interface ProcessingStep {
   stepData?: ProgressStep | ProgressSteps | SwapStep;
 }
 
-interface ProcessingState {
+export interface ProcessingState {
   currentStep: number;
   totalSteps: number;
   steps: ProcessingStep[];
@@ -77,18 +77,12 @@ const useListenBridgeTransaction = () => {
         (s) => hasTypeID(s.stepData) && s.stepData.typeID === typeID
       );
 
-      console.log("[Process Step] state: ", state);
-      console.log("[Process Step] stepData: ", stepData);
-
       if (stepIndex === -1) {
         stepIndex = Math.min(state.currentStep, state.totalSteps - 1);
       }
 
-      console.log("[Process Step] stepIndex: ", stepIndex);
-
       const newSteps = [...state.steps];
 
-      console.log("[Process Step] newSteps 1: ", newSteps);
       for (let i = 0; i <= stepIndex && i < newSteps.length; i++) {
         newSteps[i] = {
           ...newSteps[i],
@@ -98,14 +92,9 @@ const useListenBridgeTransaction = () => {
         };
       }
 
-      console.log("[Process Step] newSteps 2: ", newSteps);
-
       const nextStep = Math.min(stepIndex + 1, state.totalSteps);
 
-      console.log("[Process Step] nextStep: ", nextStep);
       let description = getStatusText(stepData?.type, "bridge");
-
-      console.log("[Process Step] description: ", description);
 
       if (stepType === "INTENT_COLLECTION" && data) {
         description = "Collecting Confirmations";
@@ -122,16 +111,11 @@ const useListenBridgeTransaction = () => {
     const handleExpectedSteps = (expectedSteps: ProgressSteps[]) => {
       expectedReceived = true;
 
-      console.log("expected steps", expectedSteps);
-
       const stepCount = Array.isArray(expectedSteps)
         ? expectedSteps.length
         : expectedSteps;
 
-      console.log("stepCount", stepCount);
       const steps = Array.isArray(expectedSteps) ? expectedSteps : [];
-
-      console.log("steps", steps);
 
       const initialSteps = Array.from({ length: stepCount }, (_, i) => ({
         id: i,
@@ -139,8 +123,6 @@ const useListenBridgeTransaction = () => {
         progress: 0,
         stepData: steps[i] || null,
       }));
-
-      console.log("initialSteps", initialSteps);
 
       setProcessing((prev) => {
         const completedTypeIDs = prev.steps
@@ -153,8 +135,6 @@ const useListenBridgeTransaction = () => {
           })
           .filter(Boolean) as string[];
 
-        console.log("completedTypeIDs", completedTypeIDs);
-
         const mergedSteps = initialSteps.map((step) => {
           if (hasTypeID(step.stepData)) {
             if (completedTypeIDs.includes(step.stepData.typeID)) {
@@ -164,8 +144,6 @@ const useListenBridgeTransaction = () => {
           return step;
         });
 
-        console.log("mergedSteps", mergedSteps);
-
         const completedCount = mergedSteps.filter((s) => s.completed).length;
         let newState: ProcessingState = {
           ...prev,
@@ -174,23 +152,17 @@ const useListenBridgeTransaction = () => {
           currentStep: completedCount,
         };
 
-        console.log("newState 1", newState);
-
         pendingSteps.forEach((queuedStep) => {
           newState = processStep(newState, queuedStep);
         });
 
-        console.log("pendingSteps", pendingSteps);
         pendingSteps.length = 0;
 
-        console.log("newState 2", newState);
         return newState;
       });
     };
 
     const handleStepComplete = (stepData: ProgressStep) => {
-      console.log("[Handle Step Complete] stepData: ", stepData);
-      console.log("[Handle Step Complete] expectedReceived", expectedReceived);
       if (!expectedReceived) {
         pendingSteps.push(stepData);
       } else {
@@ -203,7 +175,6 @@ const useListenBridgeTransaction = () => {
         "explorerURL" in stepData.data
       ) {
         setExplorerURL(stepData.data.explorerURL as string);
-        console.log("stepdata", stepData);
       }
     };
 
