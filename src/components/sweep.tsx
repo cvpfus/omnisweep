@@ -31,7 +31,8 @@ const NexusSweep = () => {
 
   const { nexusSDK, intentRefCallback } = useNexus();
 
-  const { processing, resetProcessingState } = useListenBridgeTransaction();
+  const { processing, resetProcessingState, explorerURL } =
+    useListenBridgeTransaction();
 
   const { data: unifiedBalance, isLoading: isLoadingBalance } =
     useFetchUnifiedBalanceByTokenSymbol(input, setInput);
@@ -353,6 +354,7 @@ const NexusSweep = () => {
           intent={intentRefCallback?.current}
           processing={processing}
           resetProcessingState={resetProcessingState}
+          explorerURL={explorerURL}
         />
       )}
     </div>

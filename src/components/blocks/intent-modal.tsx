@@ -14,19 +14,25 @@ import {
 } from "@avail-project/nexus-core";
 import { useState } from "react";
 import { Label } from "../ui/label";
-import { ProcessingState } from "@/hooks/useListenBridgeTransactions";
+import {
+  ProcessingState,
+  ProcessingStep,
+} from "@/hooks/useListenBridgeTransactions";
 import { getStatusText } from "@/lib/utils";
-import { Check, Loader2 } from "lucide-react";
+import { Check, ExternalLink, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNexus } from "@/providers/NexusProvider";
+import { Button } from "../ui/button";
 
 const IntentModal = ({
   intent,
   processing,
+  explorerURL,
   resetProcessingState,
 }: {
   intent: OnIntentHookData;
   processing: ProcessingState;
+  explorerURL: string | null;
   resetProcessingState: () => void;
 }) => {
   const { intent: intentData } = intent;
@@ -94,7 +100,7 @@ const IntentModal = ({
 
         <DialogFooter className="pt-4 w-full">
           <div className="flex flex-col gap-y-3 w-full">
-            {processing.steps.map((step, index) => {
+            {processing.steps.map((step: ProcessingStep, index: number) => {
               const isCurrentStep = index === processing.currentStep;
               const isCompleted = step.completed;
 
@@ -136,6 +142,24 @@ const IntentModal = ({
                 </div>
               );
             })}
+
+            {!!explorerURL && (
+              <div className="w-full pt-4">
+                <a
+                  href={explorerURL ?? ""}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    className="w-full flex gap-x-2 items-center justify-center"
+                    variant="outline"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>View in Explorer</span>
+                  </Button>
+                </a>
+              </div>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

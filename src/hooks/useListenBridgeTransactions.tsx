@@ -9,7 +9,7 @@ import {
 } from "@avail-project/nexus-core";
 import { useCallback, useEffect, useState } from "react";
 
-interface ProcessingStep {
+export interface ProcessingStep {
   id: number;
   completed: boolean;
   progress: number; // 0-100
