@@ -20,7 +20,7 @@ const ChainSelect = ({
   disabled = false,
   chainLabel,
 }: {
-  selectedChain: SUPPORTED_CHAINS_IDS;
+  selectedChain: SUPPORTED_CHAINS_IDS | null;
   handleSelect: (chainId: SUPPORTED_CHAINS_IDS) => void;
   chainLabel: string;
   disabled?: boolean;
@@ -40,7 +40,7 @@ const ChainSelect = ({
         <Label className="text-sm font-semibold">{chainLabel}</Label>
 
         <SelectTrigger disabled={disabled}>
-          <SelectValue>
+          <SelectValue placeholder="Select a destination chain">
             {!!selectedChain && (
               <div className="flex items-center gap-x-2">
                 <img
@@ -50,9 +50,7 @@ const ChainSelect = ({
                   height={24}
                   className="rounded-full"
                 />
-                <p className="text-sm">
-                  {CHAIN_METADATA[selectedChain]?.name}
-                </p>
+                <p className="text-sm">{CHAIN_METADATA[selectedChain]?.name}</p>
               </div>
             )}
           </SelectValue>
@@ -72,9 +70,7 @@ const ChainSelect = ({
                     height={24}
                     className="rounded-full"
                   />
-                  <p className="text-sm">
-                    {chainData[chainId]?.name}
-                  </p>
+                  <p className="text-sm">{chainData[chainId]?.name}</p>
                 </div>
               </SelectItem>
             );

@@ -9,7 +9,6 @@ import {
 } from "./ui/card";
 import {
   CHAIN_METADATA,
-  SUPPORTED_CHAINS,
   SUPPORTED_CHAINS_IDS,
 } from "@avail-project/nexus-core";
 import { useState } from "react";
@@ -21,16 +20,16 @@ import { Button } from "./ui/button";
 import IntentModal from "./blocks/intent-modal";
 import useListenBridgeTransaction from "@/hooks/useListenBridgeTransactions";
 import { ArrowBigRight } from "lucide-react";
-import { useNotification } from "@blockscout/app-sdk";
-import { useAccount } from "wagmi";
 import { SweepInput } from "@/types/sweep";
 import InputAmount from "./blocks/input-amount";
+import { cn } from "@/lib/utils";
 
 const NexusSweep = () => {
   const [input, setInput] = useState<SweepInput>({
     token: "ETH",
-    destinationChain: SUPPORTED_CHAINS.ETHEREUM,
+    destinationChain: null,
     sourceChains: [],
+    amount: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,12 +38,13 @@ const NexusSweep = () => {
   const { processing, explorerURL } = useListenBridgeTransaction();
 
   const { data: unifiedBalance } = useFetchUnifiedBalanceByTokenSymbol(
-    input.token
+    input,
+    setInput
   );
 
-  const account = useAccount();
-
-  const { openTxToast } = useNotification();
+  const [selectedPercentage, setSelectedPercentage] = useState<number | null>(
+    null
+  );
 
   const tokenBreakdowns = unifiedBalance?.breakdown
     ?.filter((token) => parseFloat(token.balance) > 0)
@@ -55,6 +55,12 @@ const NexusSweep = () => {
       input.sourceChains.includes(token.chain.id as SUPPORTED_CHAINS_IDS)
     )
     ?.reduce((acc, token) => acc + parseFloat(token.balance), 0);
+
+  const totalSelectedBalanceInFiat = tokenBreakdowns
+    ?.filter((token) =>
+      input.sourceChains.includes(token.chain.id as SUPPORTED_CHAINS_IDS)
+    )
+    ?.reduce((acc, token) => acc + token.balanceInFiat, 0);
 
   const handleSweep = async () => {
     if (
@@ -67,30 +73,12 @@ const NexusSweep = () => {
     setIsLoading(true);
 
     try {
-      const amount = tokenBreakdowns
-        ?.filter((token) =>
-          input.sourceChains.includes(token.chain.id as SUPPORTED_CHAINS_IDS)
-        )
-        .reduce((acc, token) => acc + parseFloat(token.balance), 0);
-
-      const sweepResult = await nexusSDK?.bridge({
+      await nexusSDK?.bridge({
         token: input.token,
         sourceChains: input.sourceChains,
-        amount: (amount ?? 0) * 0.5,
+        amount: input.amount,
         chainId: input.destinationChain,
       });
-
-      console.log("sweep result", sweepResult);
-
-      if (
-        sweepResult?.success &&
-        account.chainId &&
-        sweepResult.transactionHash
-      ) {
-        console.log(sweepResult.transactionHash);
-
-        openTxToast(account.chainId?.toString(), sweepResult.transactionHash);
-      }
     } catch (error) {
       console.error("Error while sweeping:", error);
     } finally {
@@ -99,87 +87,124 @@ const NexusSweep = () => {
     }
   };
 
+  const handleSourceChainSelected = (
+    checked: string | boolean,
+    chainId: SUPPORTED_CHAINS_IDS
+  ) => {
+    {
+      setSelectedPercentage(null);
+
+      if (checked && !input.sourceChains.includes(chainId)) {
+        setInput({
+          ...input,
+          sourceChains: [...input.sourceChains, chainId],
+        });
+      } else if (!checked && input.sourceChains.includes(chainId)) {
+        setInput({
+          ...input,
+          sourceChains: input.sourceChains.filter((chain) => chain !== chainId),
+        });
+      }
+    }
+  };
+
   return (
     <div className="w-full max-w-md">
       <Card>
-        <CardHeader>
-          <CardTitle>Sweep</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2">
           <div className="flex flex-col gap-y-1">
             <InputAmount
               selectedToken={input.token}
               handleTokenSelect={(token) => setInput({ ...input, token })}
+              value={input.amount}
+              handleValueChange={(value) => {
+                setInput({
+                  ...input,
+                  amount: parseFloat(value) || 0,
+                });
+                setSelectedPercentage(null);
+              }}
             />
-            {!!totalSelectedBalance && totalSelectedBalance > 0 && (
-              <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-sm">
-                  Unified Balance: {totalSelectedBalance?.toFixed(6)}
-                </p>
-              </div>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {tokenBreakdowns?.map((token) => {
-              return (
-                <Label
-                  key={token.chain.id}
-                  className="cursor-pointer hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10"
-                >
-                  <Checkbox
-                    checked={input.sourceChains.includes(
-                      token.chain.id as SUPPORTED_CHAINS_IDS
-                    )}
-                    onCheckedChange={(checked) => {
-                      if (
-                        checked &&
-                        !input.sourceChains.includes(
-                          token.chain.id as SUPPORTED_CHAINS_IDS
-                        )
-                      ) {
-                        setInput({
-                          ...input,
-                          sourceChains: [
-                            ...input.sourceChains,
-                            token.chain.id as SUPPORTED_CHAINS_IDS,
-                          ],
-                        });
-                      } else if (
-                        !checked &&
-                        input.sourceChains.includes(
-                          token.chain.id as SUPPORTED_CHAINS_IDS
-                        )
-                      ) {
-                        setInput({
-                          ...input,
-                          sourceChains: input.sourceChains.filter(
-                            (chain) => chain !== token.chain.id
-                          ),
-                        });
-                      }
+            <div
+              className={cn(
+                "flex items-center justify-between",
+                !totalSelectedBalance || totalSelectedBalance === 0
+                  ? "invisible"
+                  : "visible"
+              )}
+            >
+              <div className="flex items-center gap-1">
+                {[25, 50, 75].map((percentage) => (
+                  <Button
+                    key={percentage}
+                    size="xs"
+                    variant={
+                      selectedPercentage === percentage
+                        ? "outlineSelected"
+                        : "outline"
+                    }
+                    className="text-xs"
+                    onClick={() => {
+                      setSelectedPercentage(percentage);
+                      setInput({
+                        ...input,
+                        amount:
+                          (totalSelectedBalance ?? 0) * (percentage / 100),
+                      });
                     }}
-                    className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                  />
-                  <div className="grid gap-1.5 font-normal">
-                    <div className="flex items-center gap-x-2">
-                      <img
-                        src={CHAIN_METADATA[token.chain.id]?.logo}
-                        alt={token.chain.name}
-                        width={14}
-                        height={14}
-                        className="rounded-full"
-                      />
-                      <p className="text-sm leading-none font-medium">
-                        {token.chain.name}
+                  >
+                    {percentage}%
+                  </Button>
+                ))}
+              </div>
+              <p className="text-muted-foreground text-xs">
+                Unified Balance: {totalSelectedBalance?.toFixed(6)} ($
+                {totalSelectedBalanceInFiat?.toFixed(2)})
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-y-1">
+            <Label className="text-sm font-semibold">Source Chains</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {tokenBreakdowns?.map((token) => {
+                return (
+                  <Label
+                    key={token.chain.id}
+                    className="cursor-pointer hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/10"
+                  >
+                    <Checkbox
+                      checked={input.sourceChains.includes(
+                        token.chain.id as SUPPORTED_CHAINS_IDS
+                      )}
+                      onCheckedChange={(checked) =>
+                        handleSourceChainSelected(
+                          checked,
+                          token.chain.id as SUPPORTED_CHAINS_IDS
+                        )
+                      }
+                      className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                    />
+                    <div className="grid gap-1.5 font-normal">
+                      <div className="flex items-center gap-x-2">
+                        <img
+                          src={CHAIN_METADATA[token.chain.id]?.logo}
+                          alt={token.chain.name}
+                          width={14}
+                          height={14}
+                          className="rounded-full"
+                        />
+                        <p className="text-sm leading-none font-medium">
+                          {token.chain.name}
+                        </p>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {parseFloat(token.balance).toFixed(6)} {input.token}
                       </p>
                     </div>
-                    <p className="text-muted-foreground text-sm">
-                      {parseFloat(token.balance).toFixed(6)} {input.token}
-                    </p>
-                  </div>
-                </Label>
-              );
-            })}
+                  </Label>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex flex-col gap-y-2">

@@ -1,22 +1,39 @@
 import { useNexus } from "@/providers/NexusProvider";
-import { SUPPORTED_TOKENS } from "@avail-project/nexus-core";
+import { SweepInput } from "@/types/sweep";
+import { SUPPORTED_CHAINS_IDS } from "@avail-project/nexus-core";
 import { useQuery } from "@tanstack/react-query";
 
-const useFetchUnifiedBalanceByTokenSymbol = (tokenSymbol: SUPPORTED_TOKENS) => {
+const useFetchUnifiedBalanceByTokenSymbol = (
+  input: SweepInput,
+  setInput: (input: SweepInput) => void
+) => {
   const { nexusSDK } = useNexus();
 
   return useQuery({
-    queryKey: ["unified-balance", tokenSymbol],
+    queryKey: ["unified-balance", input.token],
     queryFn: async () => {
       const balance = await nexusSDK?.getUnifiedBalances();
 
-      const filteredTokenBalances = balance?.filter(
-        (token) => token.symbol === tokenSymbol
+      const filteredTokenAssets = balance?.filter(
+        (token) => token.symbol === input.token
       )?.[0];
 
-      return filteredTokenBalances;
+      const tokenBreakdowns = filteredTokenAssets?.breakdown?.filter(
+        (token) => parseFloat(token.balance) > 0
+      );
+
+      if (!!tokenBreakdowns && tokenBreakdowns.length > 0) {
+        setInput({
+          ...input,
+          sourceChains: tokenBreakdowns.map(
+            (token) => token.chain.id as SUPPORTED_CHAINS_IDS
+          ),
+        });
+      }
+
+      return filteredTokenAssets;
     },
-    enabled: !!nexusSDK,
+    enabled: !!nexusSDK && !!input.token,
   });
 };
 
