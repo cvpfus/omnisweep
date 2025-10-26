@@ -1,12 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useNexus } from "@/providers/NexusProvider";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardFooter } from "./ui/card";
 import {
   CHAIN_METADATA,
   SUPPORTED_CHAINS_IDS,
@@ -108,6 +102,21 @@ const NexusSweep = () => {
     }
   };
 
+  const handleSelectAllChains = () => {
+    const allChainIds =
+      tokenBreakdowns?.map((token) => token.chain.id as SUPPORTED_CHAINS_IDS) ||
+      [];
+
+    if (input.sourceChains.length === allChainIds.length) {
+      // Deselect all
+      setInput({ ...input, sourceChains: [] });
+    } else {
+      // Select all
+      setInput({ ...input, sourceChains: allChainIds });
+    }
+    setSelectedPercentage(null);
+  };
+
   return (
     <div className="w-full max-w-md">
       <Card>
@@ -164,13 +173,25 @@ const NexusSweep = () => {
             </div>
           </div>
           <div className="flex flex-col gap-y-1">
-            <Label className="text-sm font-semibold">Source Chains</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Source Chains</Label>
+              <Button
+                size="xs"
+                variant="ghost"
+                className="text-xs h-6"
+                onClick={handleSelectAllChains}
+              >
+                {input.sourceChains.length === tokenBreakdowns?.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
               {tokenBreakdowns?.map((token) => {
                 return (
                   <Label
                     key={token.chain.id}
-                    className="cursor-pointer hover:bg-accent/50 flex items-start gap-3 rounded-lg border p-3 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/10"
+                    className="cursor-pointer hover:bg-accent/50 flex items-start gap-2 rounded-md border p-2 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/10"
                   >
                     <Checkbox
                       checked={input.sourceChains.includes(
@@ -182,22 +203,22 @@ const NexusSweep = () => {
                           token.chain.id as SUPPORTED_CHAINS_IDS
                         )
                       }
-                      className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground mt-0.5"
                     />
-                    <div className="grid gap-1.5 font-normal">
-                      <div className="flex items-center gap-x-2">
+                    <div className="grid gap-1 font-normal">
+                      <div className="flex items-center gap-x-1.5">
                         <img
                           src={CHAIN_METADATA[token.chain.id]?.logo}
                           alt={token.chain.name}
-                          width={14}
-                          height={14}
+                          width={12}
+                          height={12}
                           className="rounded-full"
                         />
-                        <p className="text-sm leading-none font-medium">
+                        <p className="text-xs leading-none font-medium">
                           {token.chain.name}
                         </p>
                       </div>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-xs">
                         {parseFloat(token.balance).toFixed(6)} {input.token}
                       </p>
                     </div>
