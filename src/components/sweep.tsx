@@ -9,6 +9,7 @@ import { useState } from "react";
 import useFetchUnifiedBalanceByTokenSymbol from "@/hooks/useFetchUnifiedBalanceByChain";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
+import { Skeleton } from "./ui/skeleton";
 import ChainSelect from "./blocks/chain-select";
 import { Button } from "./ui/button";
 import IntentModal from "./blocks/intent-modal";
@@ -31,10 +32,8 @@ const NexusSweep = () => {
 
   const { processing, explorerURL } = useListenBridgeTransaction();
 
-  const { data: unifiedBalance } = useFetchUnifiedBalanceByTokenSymbol(
-    input,
-    setInput
-  );
+  const { data: unifiedBalance, isLoading: isLoadingBalance } =
+    useFetchUnifiedBalanceByTokenSymbol(input, setInput);
 
   const [selectedPercentage, setSelectedPercentage] = useState<number | null>(
     null
@@ -187,44 +186,64 @@ const NexusSweep = () => {
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              {tokenBreakdowns?.map((token) => {
-                return (
-                  <Label
-                    key={token.chain.id}
-                    className="cursor-pointer hover:bg-accent/50 flex items-start gap-2 rounded-md border p-2 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/10"
-                  >
-                    <Checkbox
-                      checked={input.sourceChains.includes(
-                        token.chain.id as SUPPORTED_CHAINS_IDS
-                      )}
-                      onCheckedChange={(checked) =>
-                        handleSourceChainSelected(
-                          checked,
+              {isLoadingBalance ? (
+                <>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 rounded-md border p-2"
+                    >
+                      <Skeleton className="h-4 w-4 mt-0.5" />
+                      <div className="grid gap-1 flex-1">
+                        <div className="flex items-center gap-x-1.5">
+                          <Skeleton className="h-3 w-3 rounded-full" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                tokenBreakdowns?.map((token) => {
+                  return (
+                    <Label
+                      key={token.chain.id}
+                      className="cursor-pointer hover:bg-accent/50 flex items-start gap-2 rounded-md border p-2 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/10"
+                    >
+                      <Checkbox
+                        checked={input.sourceChains.includes(
                           token.chain.id as SUPPORTED_CHAINS_IDS
-                        )
-                      }
-                      className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground mt-0.5"
-                    />
-                    <div className="grid gap-1 font-normal">
-                      <div className="flex items-center gap-x-1.5">
-                        <img
-                          src={CHAIN_METADATA[token.chain.id]?.logo}
-                          alt={token.chain.name}
-                          width={12}
-                          height={12}
-                          className="rounded-full"
-                        />
-                        <p className="text-xs leading-none font-medium">
-                          {token.chain.name}
+                        )}
+                        onCheckedChange={(checked) =>
+                          handleSourceChainSelected(
+                            checked,
+                            token.chain.id as SUPPORTED_CHAINS_IDS
+                          )
+                        }
+                        className="data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground mt-0.5"
+                      />
+                      <div className="grid gap-1 font-normal">
+                        <div className="flex items-center gap-x-1.5">
+                          <img
+                            src={CHAIN_METADATA[token.chain.id]?.logo}
+                            alt={token.chain.name}
+                            width={12}
+                            height={12}
+                            className="rounded-full"
+                          />
+                          <p className="text-xs leading-none font-medium">
+                            {token.chain.name}
+                          </p>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                          {parseFloat(token.balance).toFixed(6)} {input.token}
                         </p>
                       </div>
-                      <p className="text-muted-foreground text-xs">
-                        {parseFloat(token.balance).toFixed(6)} {input.token}
-                      </p>
-                    </div>
-                  </Label>
-                );
-              })}
+                    </Label>
+                  );
+                })
+              )}
             </div>
           </div>
 
